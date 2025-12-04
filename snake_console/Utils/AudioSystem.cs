@@ -90,10 +90,8 @@ public class LoopStream : WaveStream
             {
                 if (_source.Position == 0 || !EnableLooping)
                 {
-                    // sudah di akhir & tidak looping, selesaikan
                     break;
                 }
-                // Reset ke awal & lanjutkan loop
                 _source.Position = 0;
             }
             else
