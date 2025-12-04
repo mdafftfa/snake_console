@@ -4,17 +4,22 @@ using SadConsole.UI.Controls;
 using SadRogue.Primitives;
 using snake_console.Data;
 using snake_console.Utils;
+using snake_console.Utils.Sounds;
 
 namespace snake_console.Game;
 
 public class MainMenu : ControlsConsole
 {
 
-    private AudioSystem audio;
     private PlayerData playerData;
 
-    public MainMenu(PlayerData data) : base(80, 25)
+    public MainMenu(ControlsConsole prevConsole, PlayerData data) : base(80, 25)
     {
+        prevConsole.Clear();
+        prevConsole.Controls.Clear();
+        prevConsole.IsFocused = false;
+        prevConsole.ClearShiftValues();
+
         FontSize = new Point(10, 20);
         playerData = data;
 
@@ -24,12 +29,10 @@ public class MainMenu : ControlsConsole
 
     private void loadResources()
     {
-        audio = new AudioSystem();
     }
 
     private void init()
     {
-        audio.PlayMusicLoop(Resources.getMusic(Resources.lobby_bgm), 0.25f);
 
         this.Print(2, 1, "=--------------- PROFILE ---------------=");
         this.Print(2, 3, "Player Name: ");
@@ -44,13 +47,15 @@ public class MainMenu : ControlsConsole
             Text = "Play Game"
         };
 
-        btnPlayGame.Click += (s, e) =>
+        btnPlayGame.Click += (s,e) =>
         {
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
+            SadConsole.Game.Instance.Screen = new SelectCharacter(this, playerData);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
         };
+
         btnPlayGame.Unfocused += (s, e) =>
         {
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
         };
 
         var btnMatchHistory = new SelectionButton(18, 1) {
@@ -58,14 +63,12 @@ public class MainMenu : ControlsConsole
             Text = "Match History"
         };
         btnMatchHistory.Click += (s,e) => {
-            var mh = new MatchHistory();
-            SadConsole.Game.Instance.Screen = mh;
-
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
+            SadConsole.Game.Instance.Screen = new MatchHistory(this, playerData);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
         };
         btnMatchHistory.Unfocused += (s, e) =>
         {
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
         };
 
         var btnSnakes = new SelectionButton(18, 1) {
@@ -73,11 +76,12 @@ public class MainMenu : ControlsConsole
             Text = "Snakes"
         };
         btnSnakes.Click += (s,e) => {
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
+            SadConsole.Game.Instance.Screen = new Snakes(this, playerData);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
         };
         btnSnakes.Unfocused += (s, e) =>
         {
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
         };
 
         var btnSettings = new SelectionButton(18, 1) {
@@ -85,11 +89,12 @@ public class MainMenu : ControlsConsole
             Text = "Settings"
         };
         btnSettings.Click += (s,e) => {
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
+            SadConsole.Game.Instance.Screen = new Settings(this, playerData);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
         };
         btnSettings.Unfocused += (s, e) =>
         {
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
         };
 
         var btnExit = new SelectionButton(18, 1) {
@@ -100,11 +105,11 @@ public class MainMenu : ControlsConsole
         {
             SadConsole.Game.Instance.MonoGameInstance.Exit();
 
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
         };
         btnExit.Unfocused += (s, e) =>
         {
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
         };
 
         var theme = Colors.Default.Clone();
@@ -150,9 +155,9 @@ public class MainMenu : ControlsConsole
         Controls.Add(btnExit);
 
         Controls.FocusedControl = btnPlayGame;
+        IsFocused = true;
 
         SadConsole.Game.Instance.Screen = this;
     }
-
 
 }
