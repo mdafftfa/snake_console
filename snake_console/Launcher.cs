@@ -1,7 +1,10 @@
 ﻿using SadConsole;
 using SadConsole.Configuration;
+using SadConsole.UI;
 using snake_console.Data;
 using snake_console.Game;
+using snake_console.Utils;
+using snake_console.Utils.Sounds;
 
 namespace snake_console;
 
@@ -26,7 +29,7 @@ class Launcher
 
     private static async void OnStart(object? sender, GameHost host)
     {
-        var splash = new SplashScreen();
+        var splash = new SplashScreen(new ControlsConsole(80, 25));
         SadConsole.Game.Instance.Screen = splash;
         await splash.RunAndWaitThen(() =>
         {
@@ -42,7 +45,8 @@ class Launcher
                 else
                 {
                     var playerData = playerDataManager.Load();
-                    SadConsole.Game.Instance.Screen = new MainMenu(playerData);
+                    SadConsole.Game.Instance.Screen = new MainMenu(new ControlsConsole(20, 10), playerData);
+                    GlobalAudio.PlayBgm(Resources.getMusic(Resources.lobby_bgm), playerData.Settings.LobbyBgmVolume / 100f);
                 }
             }
             else
