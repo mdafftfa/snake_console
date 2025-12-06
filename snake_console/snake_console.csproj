@@ -19,7 +19,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <None Update="Resources\Assets\Sounds\Musics\game_bgm.wav">
+        <None Update="Resources\Assets\Sounds\Musics\game_bgm.mp3">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
 
@@ -32,6 +32,10 @@
         </None>
 
         <None Update="Resources\Assets\Sounds\SoundEffects\switch_sound.wav">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+
+        <None Update="Resources\Assets\Sounds\SoundEffects\snake_eating_sound.mp3">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

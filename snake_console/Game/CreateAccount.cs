@@ -1,9 +1,11 @@
 using SadConsole;
+using SadConsole.Input;
 using SadConsole.UI;
 using SadConsole.UI.Controls;
 using SadRogue.Primitives;
 using snake_console.Data;
 using snake_console.Utils;
+using snake_console.Utils.Sounds;
 
 namespace snake_console.Game;
 
@@ -12,7 +14,8 @@ public class CreateAccount : ControlsConsole
 
     private TextBox boxName;
     private SelectionButton btnContinue;
-    private AudioSystem audio;
+    private SelectionButton btnExitGame;
+    private AudioSystem _audioSystem;
 
 
     public CreateAccount() : base(80, 25)
@@ -25,7 +28,7 @@ public class CreateAccount : ControlsConsole
 
     private void loadResources()
     {
-        audio = new AudioSystem();
+        _audioSystem = new AudioSystem();
     }
 
     private void init()
@@ -48,20 +51,20 @@ public class CreateAccount : ControlsConsole
         boxName.MaxLength = 20;
         boxName.IsFocused = true;
 
-        SelectionButton btnExitGame = new SelectionButton(18, 1);
+        btnExitGame = new SelectionButton(18, 1);
         btnExitGame.Text = "Exit Game";
         btnExitGame.Position = new Point(8, 18);
 
         btnExitGame.Click += (s, e) =>
         {
             SadConsole.Game.Instance.MonoGameInstance.Exit();
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
+            _audioSystem.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
         };
         btnExitGame.Unfocused += (s, e) =>
         {
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
+            _audioSystem.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
         };
-        
+
         btnContinue = new SelectionButton(18, 1);
         btnContinue.Text = "Continue";
         btnContinue.Position = new Point(36, 18);
@@ -69,11 +72,11 @@ public class CreateAccount : ControlsConsole
         btnContinue.Click += (s, e) =>
         {
             TryCreateAccountAndProceed();
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
+            _audioSystem.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), 1f);
         };
         btnContinue.Unfocused += (s, e) =>
         {
-            audio.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
+            _audioSystem.PlaySoundEffect(Resources.getSoundEffect(Resources.switch_sound), 1f);
         };
 
         var customColors = SadConsole.UI.Colors.Default.Clone();
@@ -86,6 +89,13 @@ public class CreateAccount : ControlsConsole
         btnExitGame.SetThemeColors(customColors);
         btnContinue.SetThemeColors(customColors);
 
+        btnContinue.NextSelection = btnExitGame;
+        btnContinue.PreviousSelection = btnExitGame;
+
+        btnExitGame.NextSelection = btnContinue;
+        btnExitGame.PreviousSelection = btnContinue;
+
+
         Controls.Add(boxName);
         Controls.Add(btnExitGame);
         Controls.Add(btnContinue);
@@ -93,7 +103,7 @@ public class CreateAccount : ControlsConsole
         SadConsole.Game.Instance.Screen = this;
     }
 
-    private void TryCreateAccountAndProceed()
+    private async void TryCreateAccountAndProceed()
     {
         string nickname = boxName.Text?.Trim() ?? "";
         if (string.IsNullOrWhiteSpace(nickname))
@@ -106,13 +116,44 @@ public class CreateAccount : ControlsConsole
             Name = nickname,
             Money = 1000,
             History = new List<MatchRecord>(),
-            Snakes = new List<string>(),
-            Settings = new SettingsData { MusicVolume = 100 }
+            Characters = new List<string>(),
+            Settings = new SettingsData
+            {
+                LobbyBgmVolume = 25,
+                GameBgmVolume = 25,
+                LobbySoundEffectVolume = 100,
+                GameSoundEffectVolume = 100,
+            }
         };
+
+        playerData.Characters.Add("Garter Snake");
 
         PlayerDataManager playerDataManager = new PlayerDataManager();
         playerDataManager.Save(playerData);
-        SadConsole.Game.Instance.Screen = new MainMenu(playerData);
+
+        var splash = new SplashScreen(new ControlsConsole(80, 25));
+        SadConsole.Game.Instance.Screen = splash;
+        await splash.RunAndWaitThen(() =>
+        {
+            SadConsole.Game.Instance.Screen = new MainMenu(this, playerData);
+            GlobalAudio.PlayBgm(Resources.getMusic(Resources.lobby_bgm), 0.25f);
+        });
+    }
+
+    public override bool ProcessKeyboard(SadConsole.Input.Keyboard keyboard)
+    {
+        if (keyboard.IsKeyPressed(Keys.Left))
+        {
+            Controls.FocusedControl = btnExitGame;
+            return true;
+        }
+        else if (keyboard.IsKeyPressed(Keys.Right))
+        {
+            Controls.FocusedControl = btnContinue;
+            return true;
+        }
+
+        return base.ProcessKeyboard(keyboard);
     }
 
 }

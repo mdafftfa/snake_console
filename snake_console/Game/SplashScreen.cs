@@ -13,8 +13,13 @@ public class SplashScreen : ControlsConsole
 {
     private ProgressBar _bar;
 
-    public SplashScreen() : base(80, 25)
+    public SplashScreen(ControlsConsole prevConsole) : base(80, 25)
     {
+        prevConsole.Clear();
+        prevConsole.Controls.Clear();
+        prevConsole.IsFocused = false;
+        prevConsole.ClearShiftValues();
+
         this.Print(2, 1, "SNAKE CONSOLE v1.0.0");
         this.Print(2, 17, "Please wait!");
         this.Print(2, 18, "Loading Contents...");

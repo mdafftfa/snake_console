@@ -6,11 +6,13 @@ using System.IO;
 public class Resources
 {
 
-    public static string game_bgm = "game_bgm.wav";
+    public static string game_bgm = "game_bgm.mp3";
     public static string lobby_bgm = "lobby_bgm.wav";
 
     public static string click_sound = "click_sound.wav";
     public static string switch_sound = "switch_sound.wav";
+
+    public static string snake_eating_sound = "snake_eating_sound.mp3";
 
     public static string getMusic(string fileName)
     {
