@@ -5,6 +5,8 @@ using SadConsole.UI.Controls;
 using SadRogue.Primitives;
 using snake_console.Data;
 using snake_console.Objects;
+using snake_console.Objects.Obstacles;
+using snake_console.Objects.Obstacles.Enums;
 using snake_console.Objects.Snakes;
 using snake_console.Utils;
 using snake_console.Utils.Sounds;
@@ -21,13 +23,20 @@ public class Game : ControlsConsole
 
     private List<Point> snakeBody;
     private Point snakeDirection;
+
     private Point foodPosition;
-    private const int InitialSnakeLength = 3;
+
+    private Dictionary<ObstacleEntity, Point> obstacles;
+
+    private const int InitialSnakeLength = 5;
 
     private int gameSpeed = 100;
     private DateTime lastSecondsUpdate = DateTime.Now;
     private DateTime lastMoveTime = DateTime.Now;
     private bool isGameOver;
+
+    private const int REASON_TIMES_UP = 0;
+    private const int REASON_DEATH = 1;
 
     public Game(ControlsConsole prevConsole, PlayerData data, SnakeType snake) : base (80, 25)
     {
@@ -39,6 +48,7 @@ public class Game : ControlsConsole
         SnakeEntity entity = SnakeEntity.Create(snake);
 
         player = new Player(data, entity);
+        obstacles = new Dictionary<ObstacleEntity, Point>();
 
         SadConsole.Game.Instance.MonoGameInstance.Window.Title = "Snake Console | Kills: "+ kills +" | Game Ends In: "+ Time.Format(seconds);
         SadConsole.Settings.AllowWindowResize = false;
@@ -67,6 +77,7 @@ public class Game : ControlsConsole
         }
 
         GenerateFood();
+        GenerateObstacles();
 
         isGameOver = false;
         kills = 0;
@@ -77,10 +88,9 @@ public class Game : ControlsConsole
 
     private int GetAdjustedGameSpeed()
     {
-        // Jika bergerak vertikal, lebih lambat karena karakter lebih tinggi
-        if (snakeDirection.Y != 0) // Bergerak Up/Down
-            return (int)(gameSpeed * 1.5f); // 50% lebih lambat
-        else // Bergerak Left/Right
+        if (snakeDirection.Y != 0)
+            return (int)(gameSpeed * 1.5f);
+        else
             return gameSpeed;
     }
 
@@ -99,19 +109,19 @@ public class Game : ControlsConsole
 
             if (seconds <= 0)
             {
-                GameOver("Time's up!");
+                GameOver("Time's up!", REASON_TIMES_UP);
                 return;
             }
             lastSecondsUpdate = DateTime.Now;
             UpdateWindowTitle();
         }
 
-        // Gunakan adjusted game speed
         int currentSpeed = GetAdjustedGameSpeed();
 
         if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= currentSpeed)
         {
             MoveSnake();
+            UpdateObstacles();
             CheckCollisions();
             lastMoveTime = DateTime.Now;
         }
@@ -119,52 +129,188 @@ public class Game : ControlsConsole
         Render();
     }
 
+    private void UpdateObstacles()
+    {
+        List<ObstacleEntity> obstaclesToRemove = new List<ObstacleEntity>();
+        foreach (var obstacleEntry in obstacles)
+        {
+            ObstacleEntity obstacle = obstacleEntry.Key;
+            if (obstacle.getCanMove())
+            {
+                Point oldPosition = obstacleEntry.Value;
+
+                Point snakeHead = snakeBody.Count > 0 ? snakeBody[0] : Point.None;
+
+                if (obstacle.getMovementPattern() == MovementPattern.TowardsPlayer && snakeBody.Count > 0)
+                {
+                    obstacle.Update(TimeSpan.FromMilliseconds(gameSpeed), snakeHead);
+                }
+                else
+                {
+                    obstacle.Update(TimeSpan.FromMilliseconds(gameSpeed));
+                }
+
+                if (obstacle.IsOutOfBounds(1, 78, 1, 23))
+                {
+                    obstacle.BounceFromBounds(1, 78, 1, 23);
+                }
+
+                obstacles[obstacle] = obstacle.Position;
+            }
+        }
+
+        foreach (var obstacle in obstaclesToRemove)
+        {
+            obstacles.Remove(obstacle);
+        }
+    }
+
     private void CheckCollisions()
     {
+        if (snakeBody.Count == 0) return;
+
         Point head = snakeBody[0];
 
-        // Check wall collision
         if (head.X <= 0 || head.X >= 79 || head.Y <= 0 || head.Y >= 24)
         {
-            GameOver("Hit the wall!");
+            GameOver("Hit the wall!", REASON_DEATH);
             return;
         }
 
-        // Check self collision
         for (int i = 1; i < snakeBody.Count; i++)
         {
             if (head == snakeBody[i])
             {
-                GameOver("Ate yourself!");
+                GameOver("Ate yourself!", REASON_DEATH);
                 return;
             }
         }
 
-        // Check timer
+        List<ObstacleEntity> obstacleToRemove = new List<ObstacleEntity>();
+        bool hasCollided = false;
+
+        for (int segmentIndex = 0; segmentIndex < snakeBody.Count; segmentIndex++)
+        {
+            if (hasCollided) break;
+
+            Point segment = snakeBody[segmentIndex];
+
+            foreach (var obstacleEntry in obstacles)
+            {
+                ObstacleEntity obstacle = obstacleEntry.Key;
+                Point obstaclePos = obstacleEntry.Value;
+
+                if (obstacle.CollideWith(segment))
+                {
+                    hasCollided = true;
+                    obstacle.onCollision(player.getSnakeEntity());
+                    LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.snake_eating_crash_sound), player.getPlayerData().Settings.GameSoundEffectVolume / 100f);
+                    if (!player.getSnakeEntity().IsAlive())
+                    {
+                        GameOver($"Hit by {obstacle.getName()}!", REASON_DEATH);
+                        return;
+                    }
+
+                    if (obstacle.isDestructible())
+                    {
+                        obstacleToRemove.Add(obstacle);
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        foreach (var obstacle in obstacleToRemove)
+        {
+            obstacles.Remove(obstacle);
+        }
+
         if (seconds <= 0)
         {
-            GameOver("Time's up!");
+            GameOver("Time's up!", REASON_TIMES_UP);
         }
+    }
+
+    private void GenerateObstacles()
+    {
+        Random random = new Random();
+        const int obstacleCount = 10;
+
+        for (int i = 0; i < obstacleCount; i++)
+        {
+            Point? validPos = FindValidObstaclePosition();
+            if (validPos.HasValue)
+            {
+                ObstacleEntity obstacle;
+
+                int obstacleType = random.Next(0, 100);
+                if (obstacleType < 20)
+                {
+                    obstacle = new ChaseObstacle();
+                }
+                else
+                {
+                    obstacle = random.Next(0, 4) switch
+                    {
+                        0 => new Stone(),
+                        1 => new Spike(),
+                        2 => new Bush(),
+                        3 => new Wall(),
+                        _ => new Stone()
+                    };
+                }
+
+                obstacle.Position = validPos.Value;
+
+                obstacles.Add(obstacle, validPos.Value);
+            }
+        }
+    }
+
+    private Point? FindValidObstaclePosition()
+    {
+        Random random = new Random();
+
+        for (int attempt = 0; attempt < 50; attempt++)
+        {
+            int x = random.Next(2, 78);
+            int y = random.Next(2, 23);
+            Point pos = new Point(x, y);
+
+            if (!snakeBody.Contains(pos) && pos != foodPosition)
+            {
+                bool positionFree = true;
+                foreach (var obstaclePos in obstacles.Values)
+                {
+                    if (obstaclePos == pos)
+                    {
+                        positionFree = false;
+                        break;
+                    }
+                }
+
+                if (positionFree)
+                    return pos;
+            }
+        }
+
+        return null;
     }
 
     private void MoveSnake()
     {
-        // Create new head position
         Point newHead = snakeBody[0] + snakeDirection;
 
-        // Add new head
         snakeBody.Insert(0, newHead);
 
-        // If snake didn't eat food, remove tail
-        if (newHead != foodPosition)
+        snakeBody.RemoveAt(snakeBody.Count - 1);
+
+        if (newHead == foodPosition)
         {
-            snakeBody.RemoveAt(snakeBody.Count - 1);
-        }
-        else
-        {
-            // Snake ate food
             kills += 1;
-            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.snake_eating_sound), player.getPlayerData().Settings.GameSoundEffectVolume / 100f);
+            LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.snake_eating_sound),
+                player.getPlayerData().Settings.GameSoundEffectVolume / 100f);
             GenerateFood();
         }
     }
@@ -199,8 +345,19 @@ public class Game : ControlsConsole
         }
     }
 
-    private void GameOver(string reason)
+    private void GameOver(string reason, int reasonId)
     {
+        GlobalAudio.StopAll();
+        switch (reasonId)
+        {
+            case REASON_TIMES_UP:
+                LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.gameover_time_up_sound), player.getPlayerData().Settings.GameSoundEffectVolume / 100f);
+                break;
+            case REASON_DEATH:
+                LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.gameover_sound), player.getPlayerData().Settings.GameSoundEffectVolume / 100f);
+                break;
+        }
+
         isGameOver = true;
 
         int finalScore = CalculateFinalScore();
@@ -252,6 +409,7 @@ public class Game : ControlsConsole
             ResetWindowTitle();
             SadConsole.Game.Instance.Screen = new MainMenu(this, player.getPlayerData());
             GlobalAudio.StopAll();
+            LocalAudio.StopAll();
             float normalizedBgmVolume = player.getPlayerData().Settings.LobbyBgmVolume / 100f;
             GlobalAudio.PlayBgmIfNotPlaying(Resources.getMusic(Resources.lobby_bgm), normalizedBgmVolume);
             LocalAudio.PlaySoundEffect(Resources.getSoundEffect(Resources.click_sound), player.getPlayerData().Settings.LobbySoundEffectVolume / 100f);
@@ -279,10 +437,16 @@ public class Game : ControlsConsole
 
     private void Render()
     {
-        if (isGameOver)
-            return;
+        if (isGameOver) return;
 
         this.Clear();
+
+        foreach (var obstacleEntry in obstacles)
+        {
+            ObstacleEntity obstacle = obstacleEntry.Key;
+            Point position = obstacleEntry.Value;
+            this.SetCellAppearance(position.X, position.Y, new ColoredGlyph(obstacle.getColor(), Color.Black, obstacle.getSymbol()));
+        }
 
         for (int x = 0; x < 80; x++)
         {
