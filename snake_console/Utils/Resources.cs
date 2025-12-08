@@ -11,8 +11,11 @@ public class Resources
 
     public static string click_sound = "click_sound.wav";
     public static string switch_sound = "switch_sound.wav";
+    public static string gameover_time_up_sound = "gameover_times_up_sound.mp3";
+    public static string gameover_sound = "gameover_sound.mp3";
 
     public static string snake_eating_sound = "snake_eating_sound.mp3";
+    public static string snake_eating_crash_sound = "snake_eating_crash_sound.mp3";
 
     public static string getMusic(string fileName)
     {
