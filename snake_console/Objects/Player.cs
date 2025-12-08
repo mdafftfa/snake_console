@@ -1,4 +1,3 @@
-using SadRogue.Primitives;
 using snake_console.Data;
 using snake_console.Objects.Snakes;
 
