@@ -51,12 +51,13 @@ public class SnakeEntity
 
     public void attack(int baseDamage)
     {
-        if (hp - baseDamage <= 0)
-        {
-            isAlive = false;
-        }
+        hp -= baseDamage;
 
-        hp = Math.Max(0, hp - baseDamage);
+        if (hp < 0) hp = 0;
+
+        if (hp <= 0)
+        {
+        }
     }
 
     public void heal(int healAmount)
@@ -64,7 +65,10 @@ public class SnakeEntity
         hp = Math.Max(0, hp + healAmount);
     }
 
-    public bool IsAlive() => isAlive;
+    public bool IsAlive()
+    {
+        return hp > 0;
+    }
 
     public Direction getCurrentDirection() => currentDirection;
     public void setCurrentDirection(Direction newDirection) => currentDirection = newDirection;
