@@ -1,13 +1,9 @@
 using SadConsole;
 using SadConsole.UI;
 using SadRogue.Primitives;
+using SadConsole.UI.Controls;
 
 namespace snake_console.Game;
-
-using SadConsole;
-using SadConsole.UI.Controls;
-using SadRogue.Primitives;
-using System.Threading.Tasks;
 
 public class SplashScreen : ControlsConsole
 {
@@ -46,5 +42,4 @@ public class SplashScreen : ControlsConsole
         await Task.Delay(TimeSpan.FromSeconds(new Random().Next(3, 5)));
         onFinished?.Invoke();
     }
-
 }
