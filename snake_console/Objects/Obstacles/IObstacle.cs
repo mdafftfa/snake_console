@@ -5,10 +5,10 @@ namespace snake_console.Objects;
 
 public interface IObstacle
 {
-    string GetName();
-    Color GetColor();
-    char GetSymbol();
-    int GetDamage();
-    bool IsDestructible();
-    void OnCollision(SnakeEntity snake);
+    string getName();
+    Color getColor();
+    char getSymbol();
+    int getDamage();
+    bool isDestructible();
+    void onCollision(SnakeEntity snake);
 }
