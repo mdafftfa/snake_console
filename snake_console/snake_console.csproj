@@ -38,6 +38,22 @@
         <None Update="Resources\Assets\Sounds\SoundEffects\snake_eating_sound.mp3">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+
+        <None Update="Resources\Assets\Sounds\SoundEffects\gameover_times_up_sound.mp3">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+
+        <None Update="Resources\Assets\Sounds\SoundEffects\gameover_sound.mp3">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+
+        <None Update="Resources\Assets\Sounds\SoundEffects\gameover_times_up.mp3">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+
+        <None Update="Resources\Assets\Sounds\SoundEffects\snake_eating_crash_sound.mp3">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
