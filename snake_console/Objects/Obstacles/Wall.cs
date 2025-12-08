@@ -7,14 +7,13 @@ public class Wall : ObstacleEntity
 {
 
     protected override string Name => "Wall";
-    protected override Color Color => Color.Brown;
-    protected override char Symbol => '▓';
-    protected override int Damage => 0; // Tidak damage, hanya block
+    protected override Color Color => Color.WhiteSmoke;
+    protected override char Symbol => '0';
+    protected override int Damage => 5;
     protected override bool Destructible => false;
 
-    public override void OnCollision(SnakeEntity snake)
-    {
-        snake.attack(12);
-    }
+    protected override bool CanMove => false;
+    protected override int MoveInterval => 0;
+    protected override int MoveSpeed => 0;
 
 }
