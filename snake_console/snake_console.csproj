@@ -1,13 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
+        <OutputType>WinExe</OutputType>
+        <DisableWinExeOutputInference>true</DisableWinExeOutputInference>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PublishAot>false</PublishAot>
         <UseMonoGameWeb>false</UseMonoGameWeb>
         <MonoGamePlatform>DesktopGL</MonoGamePlatform>
+        <UseWindowsForms>false</UseWindowsForms>
+        <UseWPF>false</UseWPF>
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+        <IncludeSymbolsInSingleFile>false</IncludeSymbolsInSingleFile>
+        <ApplicationIcon>Resources\Assets\Icons\Icon.ico</ApplicationIcon>
+
+        <AssemblyTitle>Snake Console - PENS UAS Project</AssemblyTitle>
+        <Company>Electronic Engineering Polytechnic Institute of Surabaya</Company>
+        <Product>Snake Console Game</Product>
+        <Copyright>© 2025 - Educational Project</Copyright>
+        
     </PropertyGroup>
 
     <ItemGroup>

@@ -1,4 +1,5 @@
-﻿using SadConsole;
+﻿using System.Runtime.InteropServices;
+using SadConsole;
 using SadConsole.Configuration;
 using SadConsole.UI;
 using snake_console.Data;
@@ -11,8 +12,21 @@ namespace snake_console;
 class Launcher
 {
 
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetConsoleWindow();
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    private const int SW_HIDE = 0;
+    private const int SW_SHOW = 5;
+
     public static void Main(String[] args)
     {
+        IntPtr consoleWindow = GetConsoleWindow();
+        ShowWindow(consoleWindow, SW_HIDE);
+
         SadConsole.Settings.WindowTitle = "Snake Console";
         SadConsole.Settings.AllowWindowResize = false;
 
